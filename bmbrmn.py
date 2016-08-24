@@ -1,11 +1,11 @@
 # Enter your code here. Read input from STDIN. Print output to STDOUT
+import fileinput
 import sys
-
 
 def getData():
     data = ""
-    
-    for line in sys.stdin:
+  
+    for line in fileinput.input():
         data+=line
 
     return data
@@ -61,7 +61,7 @@ class BomberMan(object):
             t(1) = explode, t(2) = setbomb, t(3) = do nothing
         
         """
-        tempMatrix = [["NAN" for j in range(self.j+1)] for i in range(self.i+1)]
+        tempMatrix = [["NAN" for i in range(self.i)] for j in range(self.j)]
         j,i = 0,0
         
         for row in self.timeMatrix:
@@ -74,7 +74,7 @@ class BomberMan(object):
                 if entry == 2:
                     tempMatrix[j][i] = "SET" # set empty bombs
                 if entry == 1:
-                    tempMatrix[j][i] = "SXP" # explode bombs
+                    tempMatrix[j][i] = "EXP" # explode bombs
                 i+=1
             j+=1
             i=0
@@ -104,35 +104,81 @@ class BomberMan(object):
         
         return setBombs
     
-    def explode(self)
+    def explode(self):
         j,i = 0,0
-        
+        shrapnel = []
+
         for row in self.matrix:
             for entry in row:
                 if entry == 1:
-                    if self.matrix[j][i] == 1:
+                    if self.actionMatrix[j][i] == 'EXP':
                         # explode above
                         if j > 0:
-                            self.matrix[j-1][i] = 0
-                            self.timeMatrix[j-1][i] = 0
-                            self.actionMatrix[j-1][i] = 'NAN'
+                            shrapnel.append((j-1, i))
                         # explode below
                         if j < self.j-1:
-                            self.matrix[j+1][i] = 0
-                            self.timeMatrix[j+1][i] = 0
-                            self.actionMatrix[j+1][i] = 'NAN' #need to be+1?
+                            shrapnel.append((j+1, i))
                         # explode to left
                         if i > 0:
-                            self.matrix[j][i-1] = 0
-                            self.timeMatrix[j][i-1] = 0
-                            self.actionMatrix[j][i-1] = 'NAN'
+                            shrapnel.append((j, i-1))
                         if i < self.i-1:
-                            self.matrix[j][i+1] = 0
-                            self.timeMatrix[j][i+1] = 0
-                            self.actionMatrix[j][i+1] = 'NAN'
-                            
-    def
-    def
-    def
-    def
+                            shrapnel.append((j, i+1))
+                        self.matrix[j][i] = 0
+                        self.timeMatrix[j][i] = 0
+                        self.actionMatrix[j][i] = 'NAN'
+                i+=1
+            j+=1
+            i=0
+        for item in shrapnel:
+            self.matrix[item[0]][item[1]] = 0
+            self.timeMatrix[item[0]][item[1]] = 0
+            self.actionMatrix[item[0]][item[1]] = 'NAN'
+    
+    def checkSetExplode(self):
+        setExplode = False
         
+        for row in self.actionMatrix:
+            for entry in row:
+                if entry == 'EXP':
+                    setExplode = True
+                    
+        return setExplode
+    
+    def executeActions(self):
+        if self.checkSetExplode() == True:
+            self.explode()
+        
+        if self.checkSetBombs() == True:
+            self.setBombs()
+    
+    def printFinalMatrix(self):
+        j,i =0,0
+        
+        line = ""
+        
+        for row in self.matrix:
+            for entry in row:
+                if entry == 0:
+                    line+=('.')
+                if entry == 1:
+                    line+=('O')
+            print line
+            line = ""
+    
+    def start(self):
+        while self.N != 0:
+            # update actions
+            self.actionMatrix = self.updateActions()
+            
+            # execute executable actions
+            self.executeActions()
+            
+            # switch time down
+            self.tickDown()
+            
+            self.N -=1
+            
+        self.printFinalMatrix() 
+
+bomber = BomberMan()
+bomber.start()
